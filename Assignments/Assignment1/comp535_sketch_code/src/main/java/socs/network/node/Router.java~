@@ -58,6 +58,45 @@ public class Router {
       //this. router is client
       //and remote (new one) is server)
       //
+      //Should we also start a new thread? with the remote router??
+      //Link has two routers, 1 and 2.
+      //Make sure both the routers are not connected to the simulatedIP
+      int firstFreePortIndex = -1;
+      if(rd.processIPAddress.equals(processIP))
+      {
+          System.out.println("Trying to attach to current router, not possible");
+          return;
+      }
+
+      for(int i = 0; i < 4; i++)
+      {
+          //there are 4 available ports
+        if(ports[i] != null)
+             if(ports[i].router2.processIPAddress.equals(processIP) && ports[i].router1.processIPAddress.equals(rd.processIPAddress))
+              {
+                  System.out.println("This router is already attached, not reattaching....");
+                  return;
+              }
+          else
+              firstFreePortIndex = i;
+      }
+      if(firstFreePortIndex == -1)
+      {
+          System.out.println("No ports left to attach to, terminating....");
+          return;
+      }
+      //Free port found, and router is not attached
+      RouterDescription router2 = new RouterDescription();
+      router2.processIPAddress = processIP;
+      router2.processPortNumber = processPort;
+      router2.simulatedIPAddress = simulatedIP;
+      router2.status = INIT;//TODO:CHECK
+      Link linkTemp = new Link(rd,router2);
+      port[firstFreePortIndex] = linkTemp;
+      //What to do with the weight??
+
+
+
 
   }
 
