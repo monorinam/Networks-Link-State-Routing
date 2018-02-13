@@ -105,7 +105,7 @@ public class Router {
    * broadcast Hello to neighbors
    */
   private void processStart() {
-  	int count = 0;
+    //Router 1 broadcasts hello through all ports
   	for(int i = 0; i < ports.length; i++)
   	{
   		if(ports[i] == null && ports[i].exceptionFlag != 1 && ports[i].router2.status == RouterStatus.TWO_WAY)
@@ -113,27 +113,24 @@ public class Router {
   		try{
 			    SOSPFPacket packetClient = new SOSPFPacket(ports[i].router1, ports[i].router2,0); 
           ports[i].outStream.writeObj(packetClient);
-          // Read hello that is sent out  
-          // SOSPFPacket packetServer = (SOSPFPacket) ports[i].inStream.readObject();
-          // if(packetServer.sospfType == 0)
-          // {
-          //   System.out.println("Starting.....");
-          //   System.out.println("Received hello from "+packetServer.neighborID);
-          //   System.out.println("Two way communication establish for"+ports[i].router2.simulatedIPAddress);
-          //   ports[i].router2.status = RouterStatus.TWO_WAY;
-          //   //Broadcast another hello
-          //   (new ObjectOutputStream(ports[i].connection.getOutputStream())).writeObj(packetClient);
-          // }
-          // ports[i].connection.close();
+          //Read hello that is sent out  
+          SOSPFPacket packetServer = (SOSPFPacket) ports[i].inStream.readObject();
+          if(packetServer.sospfType == 0)
+          {
+            System.out.println("Starting.....");
+            System.out.println("Received hello from "+packetServer.neighborID);
+            System.out.println("Two way communication establish for"+ports[i].router2.simulatedIPAddress);
+            ports[i].router2.status = RouterStatus.TWO_WAY;
+            //Broadcast another hello
+            (new ObjectOutputStream(ports[i].connection.getOutputStream())).writeObj(packetClient);
+          }
+          ports[i].connection.close();
       }
       catch (IOException e) {
           System.out.println("Error, process could not be started");
           e.printStackTrace();
 
-      }
-
-       
-     
+      }    
   	}
 
   }
@@ -156,6 +153,13 @@ public class Router {
    * output the neighbors of the routers
    */
   private void processNeighbors() {
+    int count = 0;
+    for(int i = 0; i < ports.length; i++)
+    {
+      if(ports[i] == null || ports[i].router2.status = RouterStatus.TWO_WAY)
+        continue;
+      System.out.println("IP address of neighbour "+i+"  is "+ports[i].router2.simulatedIPAddress);
+    }
 
   }
 
@@ -163,6 +167,7 @@ public class Router {
    * disconnect with all neighbors and quit the program
    */
   private void processQuit() {
+    System.exit(0);
 
   }
 
