@@ -15,9 +15,15 @@ public class Router {
   //assuming that all routers are with 4 ports
   Link[] ports = new Link[4];
 
-  public Router(Configuration config) {
+  public Router(Configuration config) throws IOException, ClassNotFoundException{
     rd.simulatedIPAddress = config.getString("socs.network.router.ip");
+    rd.processPortNumber = config.getShort("socs.network.router.portNum");
+    rd.processIPAddress = "127.0.0.1";
     lsd = new LinkStateDatabase(rd);
+    //start the thread
+    thread = new serverThread(new serverSocket(rd.processPortNumber),this);
+    thread.start();
+    //executor service timer
   }
 
   /**
@@ -28,6 +34,13 @@ public class Router {
    * @param destinationIP the ip adderss of the destination simulated router
    */
   private void processDetect(String destinationIP) {
+  	String shortest = lsd.getShortestPath(destinationIP);
+  	if(shortest != null)
+  		System.out.println(shortest);
+  	else if (shortest == 0)
+  		System.out.println("This is your own IP");
+  	else
+  		System.out.println("The shortest distance is "+shortest);//TODO: CHANGE when getShortest is finished
 
   }
 
@@ -37,7 +50,21 @@ public class Router {
    *
    * @param portNumber the port number which the link attaches at
    */
-  private void processDisconnect(short portNumber) {
+  private void processDisconnect(short portNumber) throws Exception {
+  	if(portNumber == null || portNumber < 0 || portNumber >= ports.length)
+  	{
+  		System.out.println("Invalid port number, cannot be removed");
+  	}
+  	if(ports[portNumber].router2.simulatedIPAddress != rd.simulatedIPAddress)
+  	{
+  		//remove the port
+  		lsd.removeLinkFromLSA(rd.simulatedIPAddress,ports[portNumber].router2.simulatedIPAddress);
+  		ports[portNumber] = null;
+  		sendLSAUpdate();
+
+  	}
+  	else
+  		System.out.println("Current ip, cannot be disconnected, terminating..");
 
   }
 
@@ -145,6 +172,7 @@ public class Router {
   private void processConnect(String processIP, short processPort,
                               String simulatedIP, short weight) {
       processAttach(processIP, processPort, simulatedIP, weight);
+      processStart();
 
 
   }
@@ -211,6 +239,46 @@ public class Router {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void sendLSAUpdate() throws UnknownHostException, IOException{
+  	for(Link port:ports)
+  	{
+  		if(port == null || port.router2.status = RouterStatus.TWO_WAY)
+  		{
+  			return;
+  		}
+  		else
+  		{
+  			SOSPFPacket packetClient = new SOSPFPacket();
+  			packetClient.srcIP = rd.simulatedIPAddress;	  
+			packetClient.dstIP = lk.router2.simulatedIPAddress; 
+			packetClient.routerID = rd.simulatedIPAddress;
+			packetClient.neighborID = rd.simulatedIPAddress;
+
+			packetClient.srcProcessIP = rd.processIPAddress;
+			packetClient.srcProcessPort = rd.processPortNumber;
+			
+			packetClient.sospfType = 1;
+			
+			packetClient.lsaArray = new Vector<LSA>();
+
+			for(LSA lsaVal:lsd._store.values())
+			{
+				if(lsaVal != null)
+				{
+					packetClient.lsaArray.addElement(lsaVal);
+				}
+			}
+
+			Socket client = new Socket(port.router2.processIPAddress, port.router2.processPortNumber);
+			 ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
+			 System.out.println("sending LSAUPDATE to " + packetClient.dstIP);
+			 out.writeObject(packetClient);
+			 client.close();
+
+  		}
+  	}
   }
 
 }
