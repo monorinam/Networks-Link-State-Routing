@@ -26,7 +26,7 @@ public class Router {
     //schedule tasks
     time = new Timer();
     ScheduledTask st = new ScheduledTask(this); 
-	time.schedule(st, 0, 10000); // Create Repetitively task for every 10 secs
+    time.schedule(st, 0, 20000); //create task every 20s
   }
 
   /**
