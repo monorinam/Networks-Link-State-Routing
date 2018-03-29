@@ -22,8 +22,11 @@ public class Router {
     lsd = new LinkStateDatabase(rd);
     //start the thread
     thread = new serverThread(new serverSocket(rd.processPortNumber),this);
-    thread.start();
-    //executor service timer
+    thread.startThread();
+    //schedule tasks
+    time = new Timer();
+    ScheduledTask st = new ScheduledTask(this); 
+	time.schedule(st, 0, 10000); // Create Repetitively task for every 10 secs
   }
 
   /**
